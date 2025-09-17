@@ -10,5 +10,7 @@ export default defineConfig({
   projectId,
   dataset,
   plugins: [structureTool(), visionTool()],
-  schema,
+  schema: {
+    types: schema,
+  },
 });
