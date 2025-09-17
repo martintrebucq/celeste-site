@@ -1,23 +1,28 @@
 "use client";
 
-import { useEffect, type PropsWithChildren } from "react";
-import Lenis from "@studio-freight/lenis";
+import { useEffect, useRef, type ReactNode } from "react";
+import Lenis from "@studio-freight/lenis"; // (luego podemos migrar a 'lenis')
 
-export default function LenisProvider({ children }: PropsWithChildren) {
+export default function LenisProvider({ children }: { children: ReactNode }) {
+  const lenisRef = useRef<InstanceType<typeof Lenis> | null>(null);
+  const rafRef = useRef<number | null>(null);
+
   useEffect(() => {
     const lenis = new Lenis();
+    lenisRef.current = lenis;
 
-    let rafId: number;
     const raf = (time: number) => {
       lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+      rafRef.current = requestAnimationFrame(raf);
     };
-    rafId = requestAnimationFrame(raf);
+
+    rafRef.current = requestAnimationFrame(raf);
 
     return () => {
-      cancelAnimationFrame(rafId);
-      // @ts-expect-error destroy may exist
-      lenis?.destroy?.();
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      // algunas typings de lenis no declaran destroy; casteamos seguro:
+      (lenis as unknown as { destroy?: () => void }).destroy?.();
+      lenisRef.current = null;
     };
   }, []);
 

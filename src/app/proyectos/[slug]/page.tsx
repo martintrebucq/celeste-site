@@ -1,62 +1,73 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Image from "next/image";
+
 import { sanityClient } from "@/sanity/client";
 import { PROJECT_BY_SLUG } from "@/sanity/queries";
 import { urlFor } from "@/sanity/image";
-import Image from "next/image";
 import { PortableText } from "next-sanity";
+
+type RouteParams = { slug: string };
 
 export const revalidate = 60;
 
-export async function generateStaticParams() {
-  const slugs: { slug: string }[] = await sanityClient.fetch(`*[_type=="project"]{"slug": slug.current}`);
-  return slugs.map(s => ({ slug: s.slug }));
+// (Opcional) Metadatos dinámicos por slug
+export async function generateMetadata(
+  { params }: { params: Promise<RouteParams> }
+): Promise<Metadata> {
+  const { slug } = await params;
+
+  // Si querés armar meta real con datos del proyecto:
+  // const project = await sanityClient.fetch(PROJECT_BY_SLUG, { slug });
+  // return {
+  //   title: project?.metaTitle ?? project?.title ?? `Proyecto: ${slug}`,
+  //   description: project?.metaDescription ?? project?.excerpt ?? "",
+  // };
+
+  return { title: `Proyecto: ${slug}` };
 }
 
-export default async function ProjectPage({ params }: { params: { slug: string } }) {
-  const data = await sanityClient.fetch(PROJECT_BY_SLUG, { slug: params.slug });
+export default async function ProjectPage(
+  { params }: { params: Promise<RouteParams> }
+) {
+  const { slug } = await params;
 
-  if (!data) return null;
+  const project = await sanityClient.fetch(PROJECT_BY_SLUG, { slug });
+
+  if (!project) {
+    return notFound();
+  }
 
   return (
-    <article className="max-w-5xl mx-auto px-6 py-16">
-      <header className="mb-8">
-        <h1 className="text-4xl font-light">{data.title}</h1>
-        <p className="text-neutral-600 mt-2">{data.location} {data.year ? `• ${data.year}` : ""}</p>
-      </header>
+    <main className="max-w-5xl mx-auto p-6">
+      <h1 className="text-2xl font-medium mb-4">{project.title}</h1>
 
-      {data.cover && (
-        <div className="mb-10 rounded-2xl overflow-hidden">
-          <Image
-            src={urlFor(data.cover).width(1600).height(1000).fit("crop").url()}
-            alt={data.cover.alt || data.title}
-            width={1600}
-            height={1000}
-            className="w-full h-auto object-cover"
-          />
+      {project.cover?.asset && (
+        <Image
+          src={urlFor(project.cover).width(1600).height(900).fit("crop").url()}
+          alt={project.cover?.alt ?? project.title}
+          width={1600}
+          height={900}
+          className="w-full h-auto rounded-xl"
+        />
+      )}
+
+      {project.description && (
+        <div className="prose mt-6">
+          <PortableText value={project.description} />
         </div>
       )}
-
-      {data.description && (
-        <div className="prose prose-neutral max-w-none mb-12">
-          <PortableText value={data.description} />
-        </div>
-      )}
-
-      {Array.isArray(data.gallery) && data.gallery.length > 0 && (
-        <section className="grid md:grid-cols-2 gap-6">
-          {data.gallery.map((img: any, i: number) => (
-            <figure key={i} className="rounded-2xl overflow-hidden">
-              <Image
-                src={urlFor(img).width(1400).height(900).fit("crop").url()}
-                alt={img.alt || `${data.title} ${i+1}`}
-                width={1400}
-                height={900}
-                className="w-full h-auto object-cover"
-              />
-              {img.credit && <figcaption className="text-xs text-neutral-500 mt-1">{img.credit}</figcaption>}
-            </figure>
-          ))}
-        </section>
-      )}
-    </article>
+    </main>
   );
 }
+
+/* 
+// (Opcional) Si querés pre-generar páginas estáticas:
+import { groq } from "next-sanity";
+export async function generateStaticParams(): Promise<RouteParams[]> {
+  const slugs = await sanityClient.fetch<string[]>(
+    groq`*[_type=="project" && defined(slug.current)][].slug.current`
+  );
+  return slugs.map((slug) => ({ slug }));
+}
+*/
