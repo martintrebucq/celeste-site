@@ -8,7 +8,13 @@ export default defineType({
   icon: ImagesIcon,
   fields: [
     defineField({ name: "title", title: "Título", type: "string", validation: r => r.required() }),
-    defineField({ name: "slug", title: "Slug", type: "slug", options: { source: "title", maxLength: 96 }, validation: r => r.required() }),
+    defineField({
+      name: "slug",
+      title: "Slug",
+      type: "slug",
+      options: { source: "title", maxLength: 96 },
+      validation: r => r.required(),
+    }),
     defineField({ name: "year", title: "Año", type: "number" }),
     defineField({ name: "client", title: "Cliente", type: "string" }),
     defineField({ name: "location", title: "Ubicación", type: "string" }),
@@ -35,7 +41,7 @@ export default defineType({
         fields: [
           { name: "alt", title: "Alt", type: "string" },
           { name: "credit", title: "Crédito/Fotógrafo", type: "string" },
-        ]
+        ],
       }],
     }),
     defineField({ name: "materials", title: "Materiales", type: "array", of: [{ type: "string" }] }),
@@ -52,7 +58,6 @@ export default defineType({
     defineField({ name: "noindex", title: "No index", type: "boolean", initialValue: false }),
     defineField({ name: "publishedAt", title: "Publicado", type: "datetime" }),
   ],
-  preview: {
-    select: { title: "title", media: "cover" },
-  },
+  preview: { select: { title: "title", media: "cover" } },
 });
+  

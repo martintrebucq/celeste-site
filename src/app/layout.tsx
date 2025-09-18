@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,6 +25,16 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b">
+        <nav className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-6 text-sm">
+          <Link href="/" className="font-medium">
+            Celeste Di Forte
+          </Link>
+          <Link href="/proyectos" className="text-neutral-600 hover:text-black">
+            Proyectos
+          </Link>
+        </nav>
+      </header>
         <LenisProvider>{children}</LenisProvider>
       </body>
     </html>

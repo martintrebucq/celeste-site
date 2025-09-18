@@ -1,4 +1,5 @@
 // src/app/proyectos/[slug]/page.tsx
+import type { Metadata } from "next";
 import { sanityClient } from "@/sanity/client";
 import { PROJECT_BY_SLUG } from "@/sanity/queries";
 import { urlFor } from "@/sanity/image";
@@ -6,11 +7,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PortableText } from "next-sanity";
-import type { Image as SanityImage, PortableTextBlock } from "sanity";
+import type { PortableTextBlock } from "sanity";
 
 export const revalidate = 60;
 
-// Tipos
+// Tipos mínimos que usamos en la vista
 type ProjectCard = {
   _id: string;
   title: string;
@@ -18,11 +19,7 @@ type ProjectCard = {
   year?: number;
   location?: string;
   cover?: {
-    asset?: {
-      _id: string;
-      _type: "sanity.imageAsset";
-      url: string;
-    };
+    asset?: { _id: string };
     alt?: string;
   };
 };
@@ -44,27 +41,106 @@ type ProjectDetail = {
   providers?: string[];
   team?: string[];
   cover?: {
-    asset?: {
-      _id: string;
-      _type: "sanity.imageAsset";
-      url: string;
-    };
+    asset?: { _id: string };
     alt?: string;
   };
-  gallery?: ({
-    asset?: {
-      _id: string;
-      _type: "sanity.imageAsset";
-      url: string;
-    };
+  gallery?: Array<{
+    asset?: { _id: string };
     alt?: string;
     credit?: string;
-  })[];
+  }>;
   relatedProjects?: ProjectCard[];
   metaTitle?: string;
   metaDescription?: string;
+  noindex?: boolean;
 };
 
+// Helper para armar URL de imagen desde un _id
+const urlFromId = (id?: string, w = 1200, h = 630) =>
+  id
+    ? urlFor({ asset: { _type: "reference", _ref: id } })
+        .width(w)
+        .height(h)
+        .fit("crop")
+        .url()
+    : null;
+
+/**
+ * SEO dinámico por proyecto
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+
+  // Pedimos sólo lo necesario para SEO
+  const data = await sanityClient.fetch<{
+    title?: string;
+    slug?: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    excerpt?: string;
+    noindex?: boolean;
+    openGraphImage?: { asset?: { _id: string } };
+    cover?: { asset?: { _id: string } };
+  }>(
+    `*[_type=="project" && slug.current==$slug][0]{
+      title,
+      "slug": slug.current,
+      metaTitle,
+      metaDescription,
+      excerpt,
+      noindex,
+      openGraphImage{asset->{_id}},
+      cover{asset->{_id}}
+    }`,
+    { slug }
+  );
+
+  if (!data) {
+    return {
+      title: "Proyecto no encontrado",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const title = data.metaTitle || data.title || "Proyecto";
+  const description =
+    data.metaDescription || data.excerpt || "Proyecto del portfolio.";
+  const ogId = data.openGraphImage?.asset?._id || data.cover?.asset?._id;
+  const ogUrl = urlFromId(ogId, 1200, 630) || undefined;
+  const canonical = `/proyectos/${slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      siteName: "Celeste Di Forte",
+      images: ogUrl
+        ? [{ url: ogUrl, width: 1200, height: 630, alt: title }]
+        : undefined,
+      type: "article",
+      locale: "es_AR",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ogUrl ? [ogUrl] : undefined,
+    },
+    robots: data.noindex
+      ? { index: false, follow: false }
+      : { index: true, follow: true },
+  };
+}
+
+// Página de detalle
 export default async function ProjectPage({
   // En Next 15, los tipos generados hacen que `params` sea Promise.
   // Usamos la forma compatible para evitar el error del build.
@@ -74,9 +150,10 @@ export default async function ProjectPage({
 }) {
   const { slug } = await params;
 
-  const project = await sanityClient.fetch<ProjectDetail | null>(PROJECT_BY_SLUG, {
-    slug,
-  });
+  const project = await sanityClient.fetch<ProjectDetail | null>(
+    PROJECT_BY_SLUG,
+    { slug }
+  );
 
   if (!project) {
     notFound();
@@ -85,7 +162,10 @@ export default async function ProjectPage({
   return (
     <main className="max-w-5xl mx-auto px-6 py-12">
       <div className="mb-6">
-        <Link href="/proyectos" className="text-sm text-neutral-500 hover:text-neutral-700">
+        <Link
+          href="/proyectos"
+          className="text-sm text-neutral-500 hover:text-neutral-700"
+        >
           ← Volver a proyectos
         </Link>
       </div>
@@ -97,15 +177,9 @@ export default async function ProjectPage({
 
       {/* Portada */}
       <div className="mt-6 rounded-2xl overflow-hidden">
-        {project.cover?.asset ? (
+        {project.cover?.asset?._id ? (
           <Image
-            src={urlFor({
-              asset: {
-                _type: "reference",
-                _ref: project.cover.asset._id
-              },
-              alt: project.cover.alt
-            }).width(1600).height(1100).fit("crop").url()}
+            src={urlFromId(project.cover.asset._id, 1600, 1100)!}
             alt={project.cover?.alt ?? project.title}
             width={1600}
             height={1100}
@@ -192,15 +266,9 @@ export default async function ProjectPage({
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             {project.gallery.map((img, idx) => (
               <figure key={idx} className="overflow-hidden rounded-xl">
-                {img.asset ? (
+                {img.asset?._id ? (
                   <Image
-                    src={urlFor({
-                      asset: {
-                        _type: "reference",
-                        _ref: img.asset._id
-                      },
-                      alt: img.alt
-                    }).width(1200).height(900).fit("crop").url()}
+                    src={urlFromId(img.asset._id, 1200, 900)!}
                     alt={img.alt ?? project.title}
                     width={1200}
                     height={900}
@@ -211,9 +279,9 @@ export default async function ProjectPage({
                     Sin imagen
                   </div>
                 )}
-                {(img as { credit?: string })?.credit ? (
+                {img.credit ? (
                   <figcaption className="mt-1 text-xs text-neutral-500">
-                    {(img as { credit: string }).credit}
+                    {img.credit}
                   </figcaption>
                 ) : null}
               </figure>
@@ -230,16 +298,10 @@ export default async function ProjectPage({
             {project.relatedProjects.map((rp) => (
               <Link key={rp._id} href={`/proyectos/${rp.slug}`} className="group">
                 <div className="aspect-[4/3] overflow-hidden rounded-2xl">
-                  {rp.cover?.asset ? (
+                  {rp.cover?.asset?._id ? (
                     <Image
-                      src={urlFor({
-                        asset: {
-                          _type: "reference",
-                          _ref: rp.cover.asset._id
-                        },
-                        alt: rp.cover.alt
-                      }).width(1200).height(900).fit("crop").url()}
-                      alt={rp.cover.alt ?? rp.title}
+                      src={urlFromId(rp.cover.asset._id, 1200, 900)!}
+                      alt={rp.cover?.alt ?? rp.title}
                       width={1200}
                       height={900}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] bg-neutral-100"

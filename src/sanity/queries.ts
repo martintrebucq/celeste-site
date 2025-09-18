@@ -26,3 +26,14 @@ export const PROJECT_BY_SLUG = groq`*[_type=="project" && slug.current==$slug][0
   },
   metaTitle, metaDescription, openGraphImage{asset->}
 }`;
+
+export const HOME_QUERY = groq`*[_type=="home"][0]{
+  heroTitle,
+  heroSubtitle,
+  heroImage{asset->, alt},
+  featured[]->{
+    _id, title, "slug": slug.current, year, location,
+    excerpt, cover{asset->, alt}
+  },
+  metaTitle, metaDescription
+}`;
