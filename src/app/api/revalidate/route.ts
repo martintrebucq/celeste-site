@@ -43,13 +43,13 @@ function extractSlug(body?: WebhookBody): string | undefined {
 }
 
 export async function POST(req: NextRequest) {
-  // 1) Secret
-  const secret = req.nextUrl.searchParams.get("secret");
-  if (secret !== process.env.SANITY_REVALIDATE_SECRET) {
+  // 1) Validar secreto desde header
+  const secret = req.headers.get("x-revalidate-secret");
+  if (secret !== process.env.REVALIDATE_SECRET) {
     return NextResponse.json({ ok: false, message: "Invalid secret" }, { status: 401 });
   }
 
-  // 2) Body (puede no venir si no marcaste “Include payload”)
+  // 2) Parsear body (puede venir vacío si no pusiste "Include payload")
   let body: WebhookBody | undefined;
   try {
     body = (await req.json()) as WebhookBody;
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     // sin payload -> seguimos igual con revalidación base
   }
 
-  // 3) Derivar slug (si está disponible)
+  // 3) Extraer slug si existe
   const slug = extractSlug(body);
 
   // 4) Revalidaciones base

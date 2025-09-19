@@ -1,9 +1,31 @@
-// src/app/page.tsx
 import { sanityClient } from "@/sanity/client";
-import { HOME_QUERY } from "@/sanity/queries";
 import Image from "next/image";
 import { urlFor } from "@/sanity/image";
 import ProjectCarousel, { type ProjectCard } from "@/components/ProjectCarousel";
+
+// Define the HOME_QUERY inline since the import was missing
+const HOME_QUERY = `
+  *[_type == "home"][0]{
+    heroTitle,
+    heroSubtitle,
+    heroImage{
+      asset->{_id},
+      alt
+    },
+    featured[]->{
+      _id,
+      title,
+      slug,
+      coverImage{
+        asset->{_id},
+        alt
+      },
+      excerpt
+    },
+    metaTitle,
+    metaDescription
+  }
+`;
 
 export const revalidate = 60;
 
