@@ -1,8 +1,8 @@
 // src/app/page.tsx
 import { sanityClient } from "@/sanity/client";
 import { FEATURED_PROJECTS } from "@/sanity/queries";
-import Image from "next/image";
-import { urlFor } from "@/sanity/image";
+  //  import Image from "next/image";
+  // import { urlFor } from "@/sanity/image";
 import ProjectCarousel, { type ProjectCard } from "@/components/ProjectCarousel";
 
 export const revalidate = 60;
