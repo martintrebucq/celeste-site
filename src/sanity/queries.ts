@@ -1,28 +1,35 @@
 // src/sanity/queries.ts
-export const FEATURED_PROJECTS = /* groq */ `
-*[_type == "project" && !(_id in path("drafts.**")) && isFeatured == true]
-| order(coalesce(priority, 0) desc, _createdAt desc)[0...6]{
+export const ALL_PROJECTS = /* groq */ `
+*[_type == "project" && !(_id in path("drafts.**"))] 
+| order(_createdAt desc) {
   _id,
   title,
   "slug": slug.current,
   year,
   location,
+  excerpt,
   isFeatured,
   priority,
-  excerpt,
-  cover{asset->{_id}, alt}
+  cover {
+    asset->{_id},
+    alt
+  }
 }
 `;
 
-export const ALL_PROJECTS = /* groq */ `
-*[_type == "project" && !(_id in path("drafts.**"))]
-| order(coalesce(priority, 0) desc, _createdAt desc){
+export const FEATURED_PROJECTS = /* groq */ `
+*[_type == "project" && isFeatured == true && !(_id in path("drafts.**"))]
+| order(coalesce(priority, 9999) asc, _createdAt desc) [0...6] {
   _id,
   title,
   "slug": slug.current,
   year,
   location,
-  cover{asset->{_id}, alt}
+  excerpt,
+  cover {
+    asset->{_id},
+    alt
+  }
 }
 `;
 
@@ -43,20 +50,14 @@ export const PROJECT_BY_SLUG = /* groq */ `
   areaM2,
   providers,
   team,
-  cover{asset->{_id}, alt},
-  gallery[]{asset->{_id}, alt, credit},
+  cover{ asset->{_id}, alt },
+  gallery[]{ asset->{_id}, alt, credit },
   relatedProjects[]->{
-    _id,
-    title,
-    "slug": slug.current,
-    year,
-    location,
-    cover{asset->{_id}, alt}
+    _id, title, "slug": slug.current, year, location,
+    cover{ asset->{_id}, alt }
   },
-  // SEO opcional
   metaTitle,
   metaDescription,
-  openGraphImage{asset->{_id}},
   noindex
 }
 `;

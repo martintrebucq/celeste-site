@@ -1,10 +1,9 @@
 import { createClient } from "next-sanity";
-import { apiVersion, dataset, projectId, useCdn } from "./config";
 
 export const sanityClient = createClient({
-  projectId,
-  dataset,
-  apiVersion,
-  useCdn,
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
+  apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION || "2024-08-01",
+  useCdn: true, // true para prod; si querés ISR rápido, está bien
   perspective: "published",
 });
