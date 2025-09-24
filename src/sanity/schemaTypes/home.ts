@@ -1,30 +1,19 @@
-import { defineField, defineType } from "sanity";
-import { HomeIcon } from "@sanity/icons";
+import { defineType, defineField } from "sanity";
 
 export default defineType({
   name: "home",
   title: "Home",
   type: "document",
-  icon: HomeIcon,
   fields: [
-    defineField({ name: "heroTitle", title: "Hero — Título", type: "string", validation: r => r.required() }),
-    defineField({ name: "heroSubtitle", title: "Hero — Subtítulo", type: "text", rows: 2 }),
+    defineField({ name: "heroTitle", type: "string", title: "Título Hero" }),
+    defineField({ name: "heroSubtitle", type: "text", title: "Subtítulo" }),
+    defineField({ name: "heroMedia", type: "image", title: "Imagen/Video Hero" }),
+    defineField({ name: "autoFeatured", type: "boolean", title: "Usar proyectos destacados automáticamente", initialValue: true }),
     defineField({
-      name: "heroImage",
-      title: "Hero — Imagen",
-      type: "image",
-      options: { hotspot: true },
-      fields: [{ name: "alt", title: "Alt", type: "string" }],
-    }),
-    defineField({
-      name: "featured",
-      title: "Proyectos destacados",
+      name: "featuredProjects",
+      title: "Proyectos seleccionados (si Auto está apagado)",
       type: "array",
       of: [{ type: "reference", to: [{ type: "project" }] }],
     }),
-    // SEO opcional
-    defineField({ name: "metaTitle", title: "Meta title", type: "string" }),
-    defineField({ name: "metaDescription", title: "Meta description", type: "text", rows: 2 }),
   ],
-  preview: { select: { title: "heroTitle", media: "heroImage" } },
 });
