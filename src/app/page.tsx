@@ -1,4 +1,4 @@
-// src/app/page.tsx
+// src/app/page.tsx - CORREGIDO
 import Link from "next/link";
 import { sanityClient } from "@/sanity/client";
 import { HOME_QUERY, FEATURED_AUTO } from "@/sanity/queries";
@@ -56,7 +56,7 @@ export default async function HomePage() {
             {featured.map((p) => (
               <li key={p._id} className="space-y-2">
                 <div className="aspect-[4/3] rounded-lg bg-neutral-200 overflow-hidden" />
-                <Link href={`/proyectos/${p.slug}`} className="block font-medium">
+                <Link href={`/proyecto/${p.slug}`} className="block font-medium">
                   {p.title}
                 </Link>
                 {(p.location || p.year) && (
