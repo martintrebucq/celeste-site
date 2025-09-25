@@ -1,4 +1,4 @@
-// src/app/proyectos/[slug]/page.tsx
+// src/app/proyectos/[parent]/page.tsx
 import Link from "next/link";
 import { sanityClient } from "@/sanity/client";
 
@@ -20,7 +20,7 @@ const SUBCATS_QUERY = `
 `;
 
 const PROJECTS_BY_CAT_QUERY = `
-[_type=="project" && !(_id in path("drafts.*")) && $slug in categories[]->slug.current]
+*[_type=="project" && !(_id in path("drafts.**")) && $slug in categories[]->slug.current]
 | order(_createdAt desc){
   _id, title, "slug": slug.current, location, year,
   cover{asset->{_id}, alt}
@@ -29,20 +29,19 @@ const PROJECTS_BY_CAT_QUERY = `
 
 export const revalidate = 60;
 
-// Tipado estilo Next 15: params puede ser Promise
 type Props = {
-  params: Promise<{ slug: string }>;
+  // 👇 Next 15: params es Promise
+  params: Promise<{ parent: string }>;
   searchParams?: Promise<Record<string, string>>;
 };
 
-export default async function ProyectosPorCategoria({ params }: Props) {
-  const { slug } = await params;
+export default async function Page({ params }: Props) {
+  const { parent } = await params; // ← importantísimo
 
-  // 1) ¿Tiene subcategorías?
-  const subcats = await sanityClient.fetch<Cat[]>(SUBCATS_QUERY, { slug });
+  // 1) Buscar subcategorías del padre
+  const subcats = await sanityClient.fetch<Cat[]>(SUBCATS_QUERY, { slug: parent });
 
   if (subcats.length > 0) {
-    // Mostrar subcategorías -> linkea a la ruta anidada /proyectos/[parent]/[child]
     return (
       <main className="px-6 py-10">
         <h1 className="mb-6 text-3xl font-semibold">Proyectos</h1>
@@ -52,7 +51,7 @@ export default async function ProyectosPorCategoria({ params }: Props) {
           {subcats.map((c) => (
             <li key={c._id}>
               <Link
-                href={`/proyectos/${slug}/${c.slug}`}
+                href={`/proyectos/${parent}/${c.slug}`}
                 className="block rounded border px-4 py-4 hover:bg-neutral-50"
               >
                 {c.title}
@@ -64,8 +63,10 @@ export default async function ProyectosPorCategoria({ params }: Props) {
     );
   }
 
-  // 2) Si no hay subcategorías, el slug es hoja → mostrar proyectos
-  const projects = await sanityClient.fetch<Proj[]>(PROJECTS_BY_CAT_QUERY, { slug });
+  // 2) Si el "parent" en realidad es una hoja (no tiene subcats), mostrar proyectos
+  const projects = await sanityClient.fetch<Proj[]>(PROJECTS_BY_CAT_QUERY, {
+    slug: parent,
+  });
 
   return (
     <main className="px-6 py-10">

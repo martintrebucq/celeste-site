@@ -90,3 +90,24 @@ export const PLANS_ALL = /* groq */ `
   ctaLink
 }
 `;
+export const PARENT_CATEGORIES = /* groq */ `
+*[_type=="category" && !defined(parent)]
+| order(coalesce(order, 999) asc) {
+  _id, title, "slug": slug.current
+}
+`;
+
+export const CHILD_CATEGORIES_BY_PARENT = /* groq */ `
+*[_type=="category" && parent->slug.current==$parent]
+| order(coalesce(order, 999) asc) {
+  _id, title, "slug": slug.current
+}
+`;
+
+export const PROJECTS_BY_CHILD = /* groq */ `
+*[_type=="project" && !(_id in path("drafts.**")) && $child in categories[]->slug.current]
+| order(_createdAt desc) {
+  _id, title, "slug": slug.current, year, location, excerpt,
+  cover{asset->{_id}, alt}
+}
+`;

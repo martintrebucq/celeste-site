@@ -9,22 +9,16 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "Celeste Di Forte",
-  description: "Interiorismo y proyectos",
+  description: "Estudio de interiorismo",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased md:pl-56`}>
         <LenisProvider>
-          <div className="flex">
-            {/* Menú lateral fijo */}
-            <aside className="sticky top-0 h-screen w-56 shrink-0 border-r bg-white">
-              <SidebarNav />
-            </aside>
-            {/* Contenido */}
-            <main className="flex-1 min-h-screen">{children}</main>
-          </div>
+          <SidebarNav />
+          <div className="min-h-screen">{children}</div>
         </LenisProvider>
       </body>
     </html>
