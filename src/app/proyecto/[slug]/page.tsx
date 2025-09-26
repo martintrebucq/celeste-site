@@ -1,23 +1,4 @@
-// REORGANIZACIÓN DE RUTAS NECESARIA:
-
-// ❌ PROBLEMA ACTUAL: 
-// /proyectos/[slug]/page.tsx ← puede ser categoría O proyecto individual
-// Esto crea ambigüedad
-
-// ✅ SOLUCIÓN - Nueva estructura:
-// /proyectos/page.tsx                    ← listado de categorías principales  
-// /proyectos/[categoria]/page.tsx        ← proyectos de una categoría O subcategorías
-// /proyectos/[categoria]/[sub]/page.tsx  ← proyectos de subcategoría
-// /proyecto/[slug]/page.tsx              ← proyecto individual (nueva carpeta)
-
-// 1. CREAR: src/app/proyecto/[slug]/page.tsx
-// (Mover el contenido del código anterior aquí)
-
-// 2. ACTUALIZAR: Links en todos los componentes
-// Cambiar: href={`/proyectos/${project.slug}`} 
-// Por:     href={`/proyecto/${project.slug}`}
-
-// src/app/proyecto/[slug]/page.tsx - PROYECTO INDIVIDUAL
+// src/app/proyecto/[slug]/page.tsx - PÁGINA INDIVIDUAL DE PROYECTO
 import { sanityClient } from "@/sanity/client";
 import { PROJECT_BY_SLUG } from "@/sanity/queries";
 import Image from "next/image";
@@ -25,6 +6,7 @@ import Link from "next/link";
 import { urlFor } from "@/sanity/image";
 import SwiperGallery from "@/components/SwiperGallery";
 import { notFound } from "next/navigation";
+import type { PortableTextBlock } from "sanity";
 
 type ProjectDetail = {
   _id: string;
@@ -40,7 +22,7 @@ type ProjectDetail = {
     parent?: { slug: string };
   }>;
   excerpt?: string;
-  description?: any[];
+  description?: PortableTextBlock[]; // ✅ Tipo específico
   materials?: string;
   finishes?: string;
   dimensions?: string;
@@ -150,7 +132,18 @@ export default async function ProjectPage({ params }: Props) {
           {project.gallery?.length && (
             <section className="mb-16">
               <h2 className="text-2xl font-medium mb-8">Galería</h2>
-              <SwiperGallery items={project.gallery} titleFallback={project.title} />
+              <SwiperGallery 
+                items={project.gallery.map(img => ({
+                  asset: img.asset ? { 
+                    _id: img.asset._id, 
+                    _type: "sanity.imageAsset" as const,
+                    url: undefined 
+                  } : undefined,
+                  alt: img.alt,
+                  credit: img.credit
+                }))} 
+                titleFallback={project.title} 
+              />
             </section>
           )}
 
