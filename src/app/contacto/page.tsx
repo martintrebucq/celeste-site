@@ -21,7 +21,10 @@ export default async function ContactPage() {
     phone: contactData?.phone || "351-204-8870",
     whatsappNumber: contactData?.whatsappNumber || "543512048870",
     schedulerEmbed: contactData?.schedulerEmbed || `
-      <iframe src="https://api.leadconnectorhq.com/widget/booking/3NVcibvpbWTElHEHQHhi" style="width: 100%;border:none;overflow: hidden;" scrolling="no" id="3NVcibvpbWTElHEHQHhi_1758899110038"></iframe><br><script src="https://link.msgsndr.com/js/form_embed.js" type="text/javascript"></script>
+      <iframe src="https://api.leadconnectorhq.com/widget/booking/3NVcibvpbWTElHEHQHhi" 
+        style=width: 100%;border:none;overflow: hidden;" scrolling="no" id="3NVcibvpbWTElHEHQHhi_1758899110038">
+      </iframe><br>
+      <script src="https://link.msgsndr.com/js/form_embed.js" type="text/javascript"></script>
     `,
   };
 
@@ -171,10 +174,11 @@ export default async function ContactPage() {
             
             <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
               {contact.schedulerEmbed ? (
-                <div 
-                  className="min-h-[600px]"
-                  dangerouslySetInnerHTML={{ __html: contact.schedulerEmbed }}
-                />
+                  <div 
+                    className="min-h-[600px]"
+                    dangerouslySetInnerHTML={{ __html: contact.schedulerEmbed }}
+                    />
+                
               ) : (
                 <div className="p-12 text-center">
                   <Calendar size={48} className="mx-auto mb-4 text-neutral-400" />
