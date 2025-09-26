@@ -21,9 +21,7 @@ export default async function ContactPage() {
     phone: contactData?.phone || "351-204-8870",
     whatsappNumber: contactData?.whatsappNumber || "543512048870",
     schedulerEmbed: contactData?.schedulerEmbed || `
-      <iframe src="https://tu-ghl-calendar.com/widget" 
-              width="100%" height="600" frameborder="0">
-      </iframe>
+      <iframe src="https://api.leadconnectorhq.com/widget/booking/3NVcibvpbWTElHEHQHhi" style="width: 100%;border:none;overflow: hidden;" scrolling="no" id="3NVcibvpbWTElHEHQHhi_1758899110038"></iframe><br><script src="https://link.msgsndr.com/js/form_embed.js" type="text/javascript"></script>
     `,
   };
 
